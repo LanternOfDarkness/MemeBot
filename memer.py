@@ -77,8 +77,8 @@ class Meme:
             for image in self.images:
                 resized_image = Image.open(image)
                 x, y = resized_image.size
+                y = (y * min_width / x).__int__()
                 x = min_width
-                y = (y / (x/min_width)).__int__()
                 resized_image = resized_image.resize((x, y))
                 self.cropped_images.append(resized_image)
         elif composition_type == "grid":
