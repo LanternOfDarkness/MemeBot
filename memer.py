@@ -1,95 +1,110 @@
-from PIL import Image
-from PIL import ImageFont
-from PIL import ImageDraw
+from PIL import Image, ImageFont, ImageDraw
 import random, string
 
 class Meme:
     def __init__(self, images, texts):
         self.images = images
         self.texts = texts
+        self.cropped_images = []
+        self.images_w_text = []
+        self.result_image = None
 
-    def compose_images(self, template_number):
+    def compose_images(self, template_type="single", position="up"):
         '''
         :param template_number:
+        0 - single image
         1 - horizontal
         2 - vertical
         3 - grid (for 4 more paired images)
         :return:
         return an composed image
         '''
+        self.resize_images(template_type)
+        for index, image in enumerate(self.cropped_images):
+            self.__add_text(image, self.texts[index], position=position)
+
+        template_number = len(self.images)
         if template_number == 1:
-            '''
-            horizontal composing
-            '''
-            return self.crop_images(1)
+            self.result_image = self.images_w_text[0]
+            return self.__save_image()
 
         if template_number == 2:
+
+            if template_type == "horizontal":
+                #Here should recive cropped image and then compose
+                return None
+            elif template_type == "vertical":
+                return None
+
+        if template_number == 3:
             pass
 
-    def crop_images(self, crop_type):
+    def resize_images(self, composition_type):
         sizes = []
-        new_size = 0
-        padding = 0
-        last_size = 0
-        if crop_type == 1:
+        if composition_type == "single":
+            resized_image = Image.open(self.images[0])
+            self.cropped_images.append(resized_image)
+        elif composition_type == "horizontal":
             for image in self.images:
-                print(image)
                 sizes.append(self.__get_size(image)[1])
-                new_size += self.__get_size(image)[0]
             sizes.sort()
             min_height = sizes[0]
-            self.im = Image.new("RGBA", (new_size, min_height))
             for image in self.images:
-                appended_image = Image.open(image)
-                x, y = appended_image.size
-                x = (x / (y/min_height)).__int__()
+                resized_image = Image.open(image)
+                x, y = resized_image.size
+                x = (x / (y / min_height)).__int__()
                 y = min_height
-                last_size += x
-                appended_image = appended_image.resize((x, y))
-                index = self.images.index(image)
-                '''
-                add text for appended image
-                '''
-                appended_image = self.add_text(appended_image, self.texts[index], x, y, "down")
-                self.im.paste(appended_image, (padding, 0))
-                padding += x
+                resized_image = resized_image.resize((x, y))
+                self.cropped_images.append(resized_image)
+        elif composition_type == "vertical":
+            for image in self.images:
+                sizes.append(self.__get_size(image)[0])
+            sizes.sort()
+            min_width = sizes[0]
+            for image in self.images:
+                resized_image = Image.open(image)
+                x, y = resized_image.size
+                x = min_width
+                y = (y / (x/min_width)).__int__()
+                resized_image = resized_image.resize((x, y))
+                self.cropped_images.append(resized_image)
+        elif composition_type == "grid":
+            return None
 
-            self.im = self.im.crop((0, 0, last_size, min_height))
-            name = self.__save_image()
-            return name
+    def __add_text(self, image, text, position):
+        x, y = image.size
 
-    def add_text(self, image, text, x, y, position):
-        draw = ImageDraw.Draw(image)
-        font = ImageFont.truetype("impact.ttf", 40)
         if position == "down":
             x = (x/2).__int__()
             y = y - 50
-        elif position == "top":
+        elif position == "up":
             x = (x / 2).__int__()
             y = 10
+        elif position == "middle":
+            x = (x / 2).__int__()
+            y = (y / 2 - 25).__int__()
+
+        self.__draw_text_on_image(image, text, x, y)
+
+    def __draw_text_on_image(self, image, text, x, y):
+        draw = ImageDraw.Draw(image)
+        font = ImageFont.truetype("impact.ttf", 40)
         w, h = draw.textsize(text, font=font)
-        print(w)
+        # border
+        draw.text((x - w / 2 - 1, y - 1), text, font=font, fill=(0, 0, 0))
+        draw.text((x - w / 2 + 1, y - 1), text, font=font, fill=(0, 0, 0))
+        draw.text((x - w / 2 - 1, y + 1), text, font=font, fill=(0, 0, 0))
+        draw.text((x - w / 2 + 1, y + 1), text, font=font, fill=(0, 0, 0))
 
-        # thin border
-        draw.text((x-w/2 - 1, y), text, font=font, fill=(0, 0, 0))
-        draw.text((x-w/2 + 1, y), text, font=font, fill=(0, 0, 0))
-        draw.text((x-w/2, y - 1), text, font=font, fill=(0, 0, 0))
-        draw.text((x-w/2, y + 1), text, font=font, fill=(0, 0, 0))
+        # entire text
+        draw.text((x - w / 2, y), text, (255, 255, 255), font=font)
 
-        # thicker border
-        draw.text((x-w/2 - 1, y - 1), text, font=font, fill=(0, 0, 0))
-        draw.text((x-w/2 + 1, y - 1), text, font=font, fill=(0, 0, 0))
-        draw.text((x-w/2 - 1, y + 1), text, font=font, fill=(0, 0, 0))
-        draw.text((x-w/2 + 1, y + 1), text, font=font, fill=(0, 0, 0))
-
-        draw.text((x-w/2, y), text, (255, 255, 255), font=font)
-
-        return image
+        self.images_w_text.append(image)
 
     def __save_image(self):
-        name = self.generate_name()
-        self.im.save(name)
-        return name
+        title = self.generate_name()
+        self.result_image.save(f"./results/{title}")
+        return title
 
     def generate_name(self):
         chars = ''.join(random.sample(string.ascii_lowercase, 20))
@@ -101,7 +116,8 @@ class Meme:
         return im.size
 
 if __name__ == '__main__':
-    i1 = Meme(('data/1.jpg', 'data/2.jpg'), ("Meme", "Maker 1.0"))
-    im_name = i1.compose_images(1)
-    im = Image.open(im_name)
+   # i1 = Meme(('data/1.jpg', 'data/2.jpg'), ("Meme", "Maker 1.0"))
+    i1 = Meme(('data/1.jpg', ), ("Meme", ))
+    im_name = i1.compose_images("single", position="middle")
+    im = Image.open(f"./results/{im_name}")
     im.show()
