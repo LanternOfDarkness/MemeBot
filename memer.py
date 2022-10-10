@@ -31,21 +31,23 @@ class Meme:
         if template_number == 2:
             w, h = 0, 0
             w_sum, h_sum = 0, 0
-
+            delta = 0
             for image in self.images_w_text:
                 w, h = image.size
                 w_sum += w
                 h_sum += h
             if template_type == "horizontal":
                 self.result_image = Image.new("RGBA", (w_sum, h))
-                delta_w = 0
                 for image in self.images_w_text:
-                    self.result_image.paste(image, (delta_w, 0))
-                    delta_w += image.size[0]
+                    self.result_image.paste(image, (delta, 0))
+                    delta += image.size[0]
                 return self.__save_image()
             elif template_type == "vertical":
                 self.result_image = Image.new("RGBA", (w, h_sum))
-                return None
+                for image in self.images_w_text:
+                    self.result_image.paste(image, (0, delta))
+                    delta += image.size[1]
+                return self.__save_image()
 
         if template_number == 3:
             pass
@@ -129,6 +131,6 @@ class Meme:
 if __name__ == '__main__':
     i1 = Meme(('data/1.jpg', 'data/2.jpg'), ("Meme", "Maker 1.0"))
     #i1 = Meme(('data/1.jpg', ), ("Meme", ))
-    im_name = i1.compose_images("horizontal", position="middle")
+    im_name = i1.compose_images("vertical", position="middle")
     im = Image.open(f"./results/{im_name}")
     im.show()
