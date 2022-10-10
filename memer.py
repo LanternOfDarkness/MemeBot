@@ -19,11 +19,13 @@ class Meme:
         :return:
         return an composed image
         '''
+        template_number = len(self.images)
+        if template_number > 1 and template_type == "single" : template_type = "horizontal"
+
         self.resize_images(template_type)
         for index, image in enumerate(self.cropped_images):
             self.__add_text(image, self.texts[index], position=position)
 
-        template_number = len(self.images)
         if template_number == 1:
             self.result_image = self.images_w_text[0]
             return self.__save_image()
@@ -125,12 +127,11 @@ class Meme:
         return name
 
     def __get_size(self, image):
-        im = Image.open(image)
-        return im.size
+        return Image.open(image).size
 
 if __name__ == '__main__':
     i1 = Meme(('data/1.jpg', 'data/2.jpg'), ("Meme", "Maker 1.0"))
     #i1 = Meme(('data/1.jpg', ), ("Meme", ))
-    im_name = i1.compose_images("vertical", position="middle")
+    im_name = i1.compose_images("single", position="middle")
     im = Image.open(f"./results/{im_name}")
     im.show()
