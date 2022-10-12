@@ -30,7 +30,7 @@ class Meme:
             self.result_image = self.images_w_text[0]
             return self.__save_image()
 
-        if template_number == 2:
+        if template_number > 1:
             w, h = 0, 0
             w_sum, h_sum = 0, 0
             delta = 0
@@ -51,8 +51,6 @@ class Meme:
                     delta += image.size[1]
                 return self.__save_image()
 
-        if template_number == 3:
-            pass
 
     def resize_images(self, composition_type):
         sizes = []
@@ -130,8 +128,8 @@ class Meme:
         return Image.open(image).size
 
 if __name__ == '__main__':
-    i1 = Meme(('data/1.jpg', 'data/2.jpg'), ("Meme", "Maker 1.0"))
+    i1 = Meme(('data/1.jpg', 'data/2.jpg', 'data/2.jpg'), ("Meme", "Maker 1.0", "asdqwe"))
     #i1 = Meme(('data/1.jpg', ), ("Meme", ))
-    im_name = i1.compose_images("single", position="middle")
+    im_name = i1.compose_images("vertical", position="middle")
     im = Image.open(f"./results/{im_name}")
     im.show()
