@@ -8,6 +8,7 @@ class Meme:
         self.cropped_images = []
         self.images_w_text = []
         self.result_image = None
+        self.pre_grid_images = []
 
     def compose_images(self, template_type="single", position="up"):
         '''
@@ -33,24 +34,27 @@ class Meme:
         if template_number > 1:
             w, h = 0, 0
             w_sum, h_sum = 0, 0
-            delta = 0
             for image in self.images_w_text:
                 w, h = image.size
                 w_sum += w
                 h_sum += h
             if template_type == "horizontal":
-                self.result_image = Image.new("RGBA", (w_sum, h))
-                for image in self.images_w_text:
-                    self.result_image.paste(image, (delta, 0))
-                    delta += image.size[0]
-                return self.__save_image()
+                return self.__combine_image(w_sum, h, delta_x_change=True, delta_y_change=False)
             elif template_type == "vertical":
-                self.result_image = Image.new("RGBA", (w, h_sum))
-                for image in self.images_w_text:
-                    self.result_image.paste(image, (0, delta))
-                    delta += image.size[1]
-                return self.__save_image()
+                return self.__combine_image(w, h_sum, delta_x_change=False, delta_y_change=True)
 
+    def __combine_image(self, width, heigth, delta_x_change, delta_y_change):
+        delta_x, delta_y = 0, 0
+        self.result_image = Image.new("RGBA", (width, heigth))
+        for image in self.images_w_text:
+            if not delta_x_change:
+                delta_x = 0
+            if not delta_y_change:
+                delta_y = 0
+            self.result_image.paste(image, (delta_x, delta_y))
+            delta_x += image.size[0]
+            delta_y += image.size[1]
+        return self.__save_image()
 
     def resize_images(self, composition_type):
         sizes = []
@@ -130,6 +134,6 @@ class Meme:
 if __name__ == '__main__':
     i1 = Meme(('data/1.jpg', 'data/2.jpg', 'data/2.jpg'), ("Meme", "Maker 1.0", "asdqwe"))
     #i1 = Meme(('data/1.jpg', ), ("Meme", ))
-    im_name = i1.compose_images("vertical", position="middle")
+    im_name = i1.compose_images("horizontal", position="up")
     im = Image.open(f"./results/{im_name}")
     im.show()
