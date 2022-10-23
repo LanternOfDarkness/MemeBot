@@ -23,27 +23,23 @@ class Meme:
         if template_number == 1:
             self.result_image = self.images_w_text[0]
             return helpers.save_image(self.result_image)
+        else:
+            w_sum = sum([image.size[0] for image in self.images_w_text])
+            h_sum = sum([image.size[1] for image in self.images_w_text])
 
-        if template_number > 1:
-            w, h = 0, 0
-            w_sum, h_sum = 0, 0
-            for image in self.images_w_text:
-                w, h = image.size
-                w_sum += w
-                h_sum += h
             if template_type == "horizontal":
-                return self.__combine_image(w_sum, h, delta_x_change=1, delta_y_change=0)
+                return self.__combine_image(w_sum, int(h_sum/len(self.images_w_text)), delta_horizontal=1)
             elif template_type == "vertical":
-                return self.__combine_image(w, h_sum, delta_x_change=0, delta_y_change=1)
+                return self.__combine_image(int(w_sum/len(self.images_w_text)), h_sum, delta_horizontal=0)
 
-    def __combine_image(self, width, height, delta_x_change, delta_y_change):
+    def __combine_image(self, width, height, delta_horizontal):
         delta_x, delta_y = 0, 0
         self.result_image = Image.new("RGBA", (width, height))
 
         for image in self.images_w_text:
             self.result_image.paste(image, (delta_x, delta_y))
-            delta_x += image.size[0] * delta_x_change
-            delta_y += image.size[1] * delta_y_change
+            delta_x += image.size[0] * delta_horizontal
+            delta_y += image.size[1] * abs(delta_horizontal - 1)
 
         return helpers.save_image(self.result_image)
 
@@ -82,6 +78,6 @@ class Meme:
 if __name__ == '__main__':
     i1 = Meme(('data/1.jpg', 'data/2.jpg', 'data/2.jpg'), ("Meme", "Maker 1.0", "asdqwe"))
     # i1 = Meme(('data/1.jpg', ), ("Meme", ))
-    im_name = i1.compose_images("single", position="up")
+    im_name = i1.compose_images("horizontal", position="up")
     im = Image.open(f"./results/{im_name}")
     im.show()
