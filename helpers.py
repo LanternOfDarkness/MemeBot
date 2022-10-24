@@ -1,10 +1,12 @@
 from PIL import Image, ImageFont, ImageDraw
 import random, string
 
+
 def generate_name():
     chars = ''.join(random.sample(string.ascii_lowercase, 20))
     name = f"{chars}.png"
     return name
+
 
 def draw_text_on_image(image, text, x, y):
     draw = ImageDraw.Draw(image)
@@ -14,6 +16,7 @@ def draw_text_on_image(image, text, x, y):
     draw_text_outline(draw, font, text, (x-w/2), y)
     draw.text((x - w / 2, y), text, (255, 255, 255), font=font)
     return image
+
 
 def draw_text_outline(draw, font, text, x, y):
     for delta_x in range(-1, 2, 2):

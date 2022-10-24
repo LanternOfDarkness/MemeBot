@@ -26,11 +26,12 @@ class Meme:
         else:
             w_sum = sum([image.size[0] for image in self.images_w_text])
             h_sum = sum([image.size[1] for image in self.images_w_text])
+            image_amount = len(self.images_w_text)
 
             if template_type == "horizontal":
-                return self.__combine_image(w_sum, int(h_sum/len(self.images_w_text)), delta_horizontal=1)
+                return self.__combine_image(w_sum, int(h_sum/image_amount), delta_horizontal=1)
             elif template_type == "vertical":
-                return self.__combine_image(int(w_sum/len(self.images_w_text)), h_sum, delta_horizontal=0)
+                return self.__combine_image(int(w_sum/image_amount), h_sum, delta_horizontal=0)
 
     def __combine_image(self, width, height, delta_horizontal):
         delta_x, delta_y = 0, 0
@@ -71,13 +72,13 @@ class Meme:
             "up": [(x / 2).__int__(), 10],
             "middle": [(x / 2).__int__(), (y / 2 - 25).__int__()]
         }
-
-        self.images_w_text.append(helpers.draw_text_on_image(image, text, text_pos[position][0], text_pos[position][1]))
+        image = helpers.draw_text_on_image(image, text, text_pos[position][0], text_pos[position][1])
+        self.images_w_text.append(image)
 
 
 if __name__ == '__main__':
-    i1 = Meme(('data/1.jpg', 'data/2.jpg', 'data/2.jpg'), ("Meme", "Maker 1.0", "asdqwe"))
+    i1 = Meme(('data/1.jpg', 'data/2.jpg', 'data/2.jpg'), ("Hello", "Not hello", "OLOLO"))
     # i1 = Meme(('data/1.jpg', ), ("Meme", ))
-    im_name = i1.compose_images("horizontal", position="up")
+    im_name = i1.compose_images("vertical", position="up")
     im = Image.open(f"./results/{im_name}")
     im.show()
