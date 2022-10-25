@@ -10,39 +10,34 @@ class Meme:
         self.images_w_text = []
         self.result_image = None
         self.pre_grid_images = []
+        self.width = 0
+        self.height = 0
 
     def compose_images(self, template_type="single", position="up"):
-        template_number = len(self.images)
-
-        if template_number > 1 and template_type == "single": template_type = "horizontal"
-
         self.__resize_images(template_type)
         for index, image in enumerate(self.cropped_images):
             self.__add_text(image, self.texts[index], position=position)
 
-        if template_number == 1:
+        if template_type == "single":
             self.result_image = self.images_w_text[0]
             return helpers.save_image(self.result_image)
         else:
-            w_sum = sum([image.size[0] for image in self.images_w_text])
-            h_sum = sum([image.size[1] for image in self.images_w_text])
-            image_amount = len(self.images_w_text)
+            return self.__combine_image(template_type)
 
-            if template_type == "horizontal":
-                return self.__combine_image(w_sum, int(h_sum/image_amount), delta_horizontal=1)
-            elif template_type == "vertical":
-                return self.__combine_image(int(w_sum/image_amount), h_sum, delta_horizontal=0)
+    def __combine_image(self, orientation):
+        self.result_image = Image.new("RGBA", (self.width, self.height))
+        x = 0
+        y = 0
 
-
-    def __combine_image(self, width, height, delta_horizontal):
-        delta_x, delta_y = 0, 0
-        self.result_image = Image.new("RGBA", (width, height))
-
-        for image in self.images_w_text:
-            self.result_image.paste(image, (delta_x, delta_y))
-            delta_x += image.size[0] * delta_horizontal
-            delta_y += image.size[1] * abs(delta_horizontal - 1)
-
+        for i, img in enumerate(self.images_w_text):
+            self.result_image.paste(img, (x,y))
+            if orientation == "vertical":
+                y += img.size[1]
+            else:
+                x += img.size[0]
+                if i % 2 == 1 and orientation == "grid":
+                    y += img.size[1]
+                    x = 0
         return helpers.save_image(self.result_image)
 
     def __resize_images(self, composition_type):
@@ -61,16 +56,20 @@ class Meme:
                 elif composition_type == "horizontal":
                     x = (x / (y / min_height)).__int__()
                     y = min_height
+                    self.width += x
+                    self.height = y
                 elif composition_type == "vertical":
                     y = (y * min_width / x).__int__()
                     x = min_width
-
+                    self.width = x
+                    self.height += y
                 resized_image = new_image.resize((x, y))
                 self.cropped_images.append(resized_image)
 
         else:
             self.__resize_images(composition_type="vertical")
-
+            width = 0
+            height = 0
             temp_image = []
             counter = 0
             for i, img in enumerate(self.cropped_images):
@@ -87,6 +86,8 @@ class Meme:
                         counter +=1
 
                     temp_image.clear()
+            self.width = width*2
+            self.height = int(height*len(self.cropped_images)/2)
 
 
     def __add_text(self, image, text, position):
@@ -99,7 +100,6 @@ class Meme:
         }
         image = helpers.draw_text_on_image(image, text, text_pos[position][0], text_pos[position][1])
         self.images_w_text.append(image)
-        image.show()
 
 
 if __name__ == '__main__':
